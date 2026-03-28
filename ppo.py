@@ -3,16 +3,6 @@ import torch.nn.functional as F
 
 
 class PPO:
-    """
-    Proximal Policy Optimization (Schulman et al., 2017).
-
-    The clipped surrogate objective bounds the policy update so that
-    the new policy never strays too far from the old one.  This is
-    the key difference from A2C: no more destructive overshooting.
-
-    Each rollout is reused for `n_epochs` passes of mini-batch SGD,
-    making PPO far more sample-efficient than single-update A2C.
-    """
 
     def __init__(self, model, lr=2.5e-4, gamma=0.99,
                  value_coef=0.5, entropy_coef=0.01, max_grad_norm=0.5,

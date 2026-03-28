@@ -16,10 +16,7 @@ def preprocess_frame(obs):
 
 
 class FrameStack:
-    """
-    Stacks the last `n` grayscale frames into a single (n, 96, 96) observation.
-    This gives the agent a sense of motion and velocity.
-    """
+
     def __init__(self, n=4):
         self.n = n
         self.frames = deque(maxlen=n)
@@ -44,9 +41,7 @@ def to_tensor(x, device):
 
 
 def compute_returns(rewards, dones, last_value, gamma=0.99):
-    """
-    Compute discounted returns with bootstrapping.
-    """
+
     returns = []
     R = last_value
     for reward, done in zip(reversed(rewards), reversed(dones)):
@@ -56,13 +51,7 @@ def compute_returns(rewards, dones, last_value, gamma=0.99):
 
 
 def compute_gae(rewards, values, dones, last_value, gamma=0.99, lam=0.95):
-    """
-    Generalized Advantage Estimation (Schulman et al., 2016).
 
-    Reduces variance compared to raw n-step returns by exponentially
-    weighting TD residuals.  Returns both the GAE advantages and the
-    corresponding value targets (advantages + values).
-    """
     n_steps = len(rewards)
     advantages = np.zeros(n_steps, dtype=np.float32)
     last_gae = 0.0
@@ -79,7 +68,7 @@ def compute_gae(rewards, values, dones, last_value, gamma=0.99, lam=0.95):
 
 
 # Discrete action set for CarRacing-v3
-# Each action is [steering, gas, brake]
+# can also be found in the GYM documentation
 DISCRETE_ACTIONS = [
     [0.0,  0.0, 0.0],   # 0: do nothing
     [-1.0, 0.0, 0.0],   # 1: steer left

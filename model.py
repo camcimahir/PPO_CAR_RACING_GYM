@@ -3,11 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class CNN(nn.Module):
-    """
-    CNN backbone for stacked grayscale frames.
-    Input: (batch, 4, 96, 96) — 4 stacked grayscale frames
-    Output: 512-dim feature vector
-    """
+
     def __init__(self):
         super().__init__()
         self.net = nn.Sequential(
@@ -30,17 +26,7 @@ class CNN(nn.Module):
         return self.net(x)
 
 class Actor(nn.Module):
-    """
-    Continuous policy — outputs a multidimensional normal distribution.
-    Action space: [steering (-1,1), gas (0,1), brake (0,1)]
 
-    Key design choices vs. the old version:
-      1. Separate activations per action dim (tanh for steering, sigmoid for
-         gas/brake) so the Gaussian mean sits inside each action's valid range.
-      2. State-independent learnable log_std instead of a sigma head.  This is
-         far more stable: a sigma network can collapse to ~0 for certain states
-         (exploding log-probs) or grow unbounded (pure noise).
-    """
     def __init__(self, feature_dim=512, action_dim=3):
         super().__init__()
         self.mu_head = nn.Linear(feature_dim, action_dim)
@@ -74,7 +60,6 @@ class Actor(nn.Module):
         return log_prob, entropy
 
 class Critic(nn.Module):
-    """Value network — outputs scalar V(s)."""
     def __init__(self, feature_dim=512):
         super().__init__()
         self.value_head = nn.Linear(feature_dim, 1)
@@ -85,7 +70,6 @@ class Critic(nn.Module):
         return self.value_head(features).squeeze(-1)
 
 class ActorCritic(nn.Module):
-    """Shared CNN backbone with separate Actor and Critic heads."""
     def __init__(self):
         super().__init__()
         self.cnn    = CNN()

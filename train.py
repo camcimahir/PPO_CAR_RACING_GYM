@@ -35,15 +35,11 @@ CONFIG = {
 }
 # ──────────────────────────────────────────────────────────────────────────────
 def collect_rollouts(envs, frame_stacks, model, n_steps, device, obs, current_ep_rewards):
-    """
-    Collect n_steps of experience across multiple environments simultaneously.
-    obs is (num_envs, 4, 96, 96).
-    """
+
     num_envs = CONFIG['num_envs']
 
     # Storage arrays for batching
     obs_batch = np.zeros((n_steps, num_envs, 4, 96, 96), dtype=np.float32)
-    # UPDATED: Now expects 3 continuous values instead of 1 integer
     actions_batch = np.zeros((n_steps, num_envs, 3), dtype=np.float32)
     rewards_batch = np.zeros((n_steps, num_envs), dtype=np.float32)
     dones_batch = np.zeros((n_steps, num_envs), dtype=np.float32)
@@ -57,7 +53,6 @@ def collect_rollouts(envs, frame_stacks, model, n_steps, device, obs, current_ep
         with torch.no_grad():
             action_idx, log_prob, value = model.get_action(obs_tensor)
 
-        # UPDATED: The network outputs raw floats. We clamp them to the environment's action space:
         # Steering: [-1.0, 1.0], Gas: [0.0, 1.0], Brake: [0.0, 1.0]
         actions_np = action_idx.cpu().numpy()
         actions_np[:, 0] = np.clip(actions_np[:, 0], -1.0, 1.0)
@@ -136,14 +131,12 @@ def train():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
 
-    # Create 16 parallel environments
     def make_env():
         return gym.make(CONFIG['env_name'], render_mode=None)
     
     envs = gym.vector.AsyncVectorEnv([make_env for _ in range(CONFIG['num_envs'])])
     
-    # Maintain a separate framestack for each environment
-    frame_stacks = [FrameStack(n=4) for _ in range(CONFIG['num_envs'])]
+=    frame_stacks = [FrameStack(n=4) for _ in range(CONFIG['num_envs'])]
 
     model = ActorCritic().to(device)
     agent = PPO(
@@ -165,7 +158,6 @@ def train():
     all_ep_rewards = []
     start_time = time.time()
 
-    # Initialize environments and frame stacks
     raw_obs, _ = envs.reset()
     obs = np.array([fs.reset(raw_obs[i]) for i, fs in enumerate(frame_stacks)])
     current_ep_rewards = np.zeros(CONFIG['num_envs'])
@@ -177,7 +169,6 @@ def train():
             envs, frame_stacks, model, CONFIG['n_steps'], device, obs, current_ep_rewards
         )
         
-        # We collected n_steps * num_envs of experience
         total_steps += CONFIG['n_steps'] * CONFIG['num_envs']
         update += 1
 
